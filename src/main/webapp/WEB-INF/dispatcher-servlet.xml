@@ -1,0 +1,61 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:orcl="http://www.springframework.org/schema/data/orcl"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+http://www.springframework.org/schema/data/orcl http://www.springframework.org/schema/data/orcl/spring-data-orcl-1.0.xsd
+http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms.xsd">
+
+	<context:component-scan
+		base-package="com.oracle.aq.jms.example.listener" />
+	<orcl:aq-jms-connection-factory
+		use-local-data-source-transaction="true"
+		native-jdbc-extractor="dbcpNativeJdbcExtractor" id="connectionFactory"
+		data-source="dataSource" />
+
+	<context:property-placeholder
+		location="classpath:config.properties" />
+
+	<bean id="dataSource" class="oracle.jdbc.pool.OracleDataSource">
+		<property name="URL" value="${db.url}" />
+		<property name="user" value="${db.username}" />
+		<property name="password" value="${db.password}" />
+	</bean>
+
+
+	<bean id="dbcpNativeJdbcExtractor"
+		class="org.springframework.jdbc.support.nativejdbc.Jdbc4NativeJdbcExtractor" />
+
+	<bean id="jmsTemplate"
+		class="org.springframework.jms.core.JmsTemplate">
+		<property name="sessionTransacted" value="true" />
+		<property name="connectionFactory" ref="connectionFactory" />
+	</bean>
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- jndi config -->
+
+	<bean id="dataSourcejndi"
+		class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName">
+			<value>${jndi.name}</value>
+		</property>
+	</bean>
+
+
+	<jms:listener-container
+		connection-factory="connectionFactory" error-handler="errorHandler"
+		transaction-manager="transactionManager">
+		<jms:listener destination="${queue.name}"
+			ref="dataReceiverServiceILImpl" method="dataReceived" />
+	</jms:listener-container>
+
+
+</beans>
