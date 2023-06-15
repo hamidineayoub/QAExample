@@ -8,11 +8,7 @@ import org.springframework.stereotype.Component;
 
 
 
-/**
- * 
- * @author Oumaima.Khouchfi
- *
- */
+
 @Component
 public class DataReceiverServiceILImpl  implements DataReceiverService {
 	
